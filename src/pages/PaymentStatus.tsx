@@ -25,23 +25,19 @@ const PaymentStatus = () => {
 
       try {
         const { data, error } = await supabase.functions.invoke('check-payment-status', {
-          body: { merchantReference, trackingId }
+          body: { trackingId }
         });
 
         if (error) throw error;
 
-        switch (data?.status) {
-          case "COMPLETED":
-            setStatus("success");
-            break;
-          case "FAILED":
-            setStatus("failed");
-            break;
-          case "PENDING":
-            setStatus("pending");
-            break;
-          default:
-            setStatus("failed");
+        const status = data?.status?.toUpperCase();
+        
+        if (status?.includes("COMPLETED") || status?.includes("SUCCESS")) {
+          setStatus("success");
+        } else if (status?.includes("FAILED") || status?.includes("INVALID")) {
+          setStatus("failed");
+        } else {
+          setStatus("pending");
         }
       } catch (error: any) {
         console.error("Status check error:", error);
