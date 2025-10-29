@@ -73,8 +73,13 @@ serve(async (req) => {
     // Get access token
     const token = await getAccessToken();
 
-    // Register IPN (if not already registered)
-    await registerIPN(token);
+    // Register IPN and get the IPN ID
+    const ipnData = await registerIPN(token);
+    const ipnId = ipnData.ipn_id;
+
+    if (!ipnId) {
+      throw new Error('Failed to get IPN ID from registration');
+    }
 
     // Generate unique merchant reference
     const merchantReference = `TXN-${Date.now()}-${Math.random().toString(36).substring(7)}`;
@@ -89,7 +94,7 @@ serve(async (req) => {
       amount: amount,
       description: `Payment from ${firstName} ${lastName}`,
       callback_url: callbackUrl,
-      notification_id: '', // Will be populated after IPN registration
+      notification_id: ipnId,
       billing_address: {
         email_address: email,
         first_name: firstName,
